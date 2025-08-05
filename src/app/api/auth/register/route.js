@@ -2,22 +2,24 @@ import { NextResponse } from "next/server";
 import connectDb from "../../../../../db/connectDb";
 import User from "../../../../../models/User";
 import bcrypt from "bcryptjs";
+import Redis from "ioredis";
 
-const otpStore = {};
+const redis = new Redis(process.env.REDIS_URL);
 
 export async function POST(request) {
   try {
     const { email, otp } = await request.json();
-    const storedData = otpStore[email];
-
-    if (!storedData) {
+    // Retrieve OTP and userDetails from Redis
+    const redisData = await redis.get(email);
+    if (!redisData) {
       return NextResponse.json(
         { message: "OTP not found. Please request a new one." },
         { status: 400 }
       );
     }
+    const storedData = JSON.parse(redisData);
     if (Date.now() > storedData.expiration) {
-      delete otpStore[email];
+      await redis.del(email);
       return NextResponse.json(
         { message: "OTP has expired." },
         { status: 400 }
@@ -42,8 +44,8 @@ export async function POST(request) {
       password: hashedPassword,
     });
 
-    // Clean up the temporary store
-    delete otpStore[email];
+    // Clean up the Redis store
+    await redis.del(email);
 
     return NextResponse.json(
       {
