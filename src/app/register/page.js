@@ -26,7 +26,7 @@ const Register = () => {
     setSuccess("");
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/send-otp", {
+      const response = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName, email, password, phone }),
@@ -55,7 +55,7 @@ const Register = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/auth/register",
+        "/api/auth/register",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
